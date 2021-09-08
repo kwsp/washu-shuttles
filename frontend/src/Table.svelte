@@ -1,64 +1,65 @@
 <script lang="ts">
-  export let data: JSON;
+  export let data: JSON
 
   interface Entry {
-    time: Date;
-    str: string;
-    ampm: string;
+    time: Date
+    str: string
+    ampm: string
   }
 
   interface Schedule {
-    [stop: string]: Array<Entry | null>;
+    [stop: string]: Array<Entry | null>
   }
 
   // if ordered keys provided, use that
-  const keys: Array<string> = data["keys"] || Object.keys(data);
+  const keys: Array<string> = data['keys'] || Object.keys(data)
   const ampm: Array<string> = data[keys[0]].map(
-    (entry) => entry.match(/AM|PM/)[0]
-  );
+    (entry) => entry.match(/[AaPp][Mm]/)[0]
+  )
 
-  const currentTime = new Date();
+  const currentTime = new Date()
 
   function transformEntry(s: string | null): Entry | null {
     if (!s) {
-      return null;
+      return null
     }
-    const res = s.match(/(1[0-2]|0?[1-9]):([0-5][0-9]) ?([AaPp][Mm])/);
+    const res = s.match(/(1[0-2]|0?[1-9]):([0-5][0-9]) ?([AaPp][Mm])/)
     try {
-      const hour = parseInt(res[1]);
-      const minute = parseInt(res[2]);
-      const ampm = res[3];
+      const hour = parseInt(res[1])
+      const minute = parseInt(res[2])
+      const ampm = res[3]
 
-      const d = new Date();
-      d.setHours(ampm == "PM" || ampm == "pm" ? hour + 12 : hour);
-      d.setMinutes(minute);
+      const d = new Date()
+      d.setHours(ampm.match(/[Pp][Mm]/) ? (hour % 12) + 12 : hour)
+      d.setMinutes(minute)
       return {
         time: d,
         str:
-          hour.toString().padStart(2, "0") +
-          ":" +
-          minute.toString().padStart(2, "0"),
+          hour.toString().padStart(2, '0') +
+          ':' +
+          minute.toString().padStart(2, '0'),
         ampm: ampm,
-      };
+      }
     } catch (err) {}
   }
 
   function transformSchedule(data) {
-    let obj = {};
+    let obj = {}
     for (const key of keys) {
-      obj[key] = data[key].map((s) => transformEntry(s));
+      obj[key] = data[key].map((s) => transformEntry(s))
     }
-    return obj;
+    return obj
   }
 
-  const schedule: Schedule = transformSchedule(data);
+  const schedule: Schedule = transformSchedule(data)
 
+  // Predicate to check if this bus will arrive in the future
   const isFuture = (entry: Entry | null): Boolean => {
     if (!entry) {
-      return false;
+      return false
     }
-    return currentTime < entry.time;
-  };
+    return currentTime < entry.time
+  }
 </script>
 
 <div class="table-container">
@@ -79,9 +80,9 @@
           {#each data[keys[0]] as _, i}
             <td
               class={schedule[key][i] && isFuture(schedule[key][i])
-                ? "highlight"
-                : ""}
-              >{schedule[key][i] ? schedule[key][i].str : ""}
+                ? 'highlight'
+                : ''}
+              >{schedule[key][i] ? schedule[key][i].str : ''}
             </td>
           {/each}
         </tr>
