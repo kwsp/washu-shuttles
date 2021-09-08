@@ -18,6 +18,7 @@ req_params = {
 urls = {
     "Lewis Center Shuttle": "https://parking.wustl.edu/items/lewis-center/",
     "Delmar Loop Shuttle": "https://parking.wustl.edu/items/delmar-loop/",
+    "Metro Green Line": "https://www.metrostlouis.org/route/5-green/",
 }
 
 
@@ -36,10 +37,14 @@ def main():
         dfs = getTablesFromUrl(url)
 
         # first table is week day, second table is weekend
-        assert len(dfs) == 2
+        # for metro, second is saturday and third is sunday but
+        # for metro green line they are the same.
+        assert len(dfs) >= 2
         db.update(name + "_weekday", dfs[0])
         db.update(name + "_weekend", dfs[1])
 
 
 if __name__ == "__main__":
     main()
+
+    getTablesFromUrl(urls["Metro Green Line"])
