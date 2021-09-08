@@ -1,32 +1,31 @@
 <script lang="ts">
-  import Table from "./Table.svelte";
+  import Table from './Table.svelte'
 
-  export let apiUrl: string;
+  export let apiUrl: string
 
-  let schedules: Object = {};
-  let weekdayP = true;
+  let schedules: Object = {}
+  let weekdayP = true
 
-  $: suffix = weekdayP ? "_weekday" : "_weekend";
+  $: suffix = weekdayP ? '_weekday' : '_weekend'
   $: removeSuffix = (s: string) => {
-    return s.slice(0, s.lastIndexOf("_"));
-  };
+    return s.slice(0, s.lastIndexOf('_'))
+  }
 
   $: scheduleNames = Object.keys(schedules).filter((name) =>
     name.endsWith(suffix)
-  );
-  let selectName;
+  )
+  let selectName
 
   fetch(apiUrl)
     .then((resp) => resp.json())
     .then((res) => {
-      schedules = res;
+      schedules = res
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.log(err))
 </script>
 
 <main>
   <h2>WashU Shuttles</h2>
-  <a href={apiUrl}>API: {apiUrl}</a>
 
   <section>
     {#if !schedules}
