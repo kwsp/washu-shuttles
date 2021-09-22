@@ -83,7 +83,7 @@ export default {
     production && terser(),
     replace({
       API_URL: production
-        ? 'http://s.tnie.io/api'
+        ? 'https://s.tnie.io/api'
         : 'http://localhost:9999/api',
     }),
   ],
