@@ -1,5 +1,6 @@
 <script lang="ts">
   export let data: JSON
+  export let currentTime: Date
 
   interface Entry {
     time: Date
@@ -16,8 +17,6 @@
   const ampm: Array<string> = data[keys[0]].map(
     (entry) => entry.match(/[AaPp][Mm]/)[0]
   )
-
-  const currentTime = new Date()
 
   function transformEntry(s: string | null): Entry | null {
     if (!s) {

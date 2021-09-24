@@ -81,11 +81,6 @@ export default {
     // If we're building for production (npm run build
     // instead of npm run dev), minify
     production && terser(),
-    replace({
-      API_URL: production
-        ? 'https://s.tnie.io/api'
-        : 'http://localhost:9999/api',
-    }),
   ],
   watch: {
     clearScreen: false,

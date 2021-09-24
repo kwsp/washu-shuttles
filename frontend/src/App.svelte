@@ -1,20 +1,24 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
+
   import Table from './Table.svelte'
 
   export let apiUrl: string
 
   let schedules: Object = {}
-  let weekdayP = true
+  let now = new Date()
+  onMount(() => {
+    const interval = setInterval(() => {
+      now = new Date()
+    }, 1000)
+  })
 
-  $: suffix = weekdayP ? '_weekday' : '_weekend'
-  $: removeSuffix = (s: string) => {
-    return s.slice(0, s.lastIndexOf('_'))
-  }
+  $: isWeekend = now.getDay() === 6 || now.getDay() === 0
+  $: suffix = isWeekend ? 'Weekday' : 'Weekend'
 
   $: scheduleNames = Object.keys(schedules).filter((name) =>
     name.endsWith(suffix)
   )
-  let selectName
 
   fetch(apiUrl)
     .then((resp) => resp.json())
@@ -25,15 +29,26 @@
 </script>
 
 <main>
-  <h2>WashU Shuttles</h2>
+  <a href="https://parking.wustl.edu/campus-shuttle-system/">
+    <h2>WashU Shuttles</h2>
+  </a>
 
   <section>
     {#if !schedules}
       <p>Waiting for data to load...</p>
     {:else}
+      <p>{now}</p>
       {#each scheduleNames as name}
-        <p>{removeSuffix(name)}</p>
-        <Table data={schedules[name]} />
+        <a
+          href={'src_url' in schedules[name]
+            ? schedules[name]['src_url']
+            : './'}
+        >
+          <h3>
+            {name}
+          </h3>
+        </a>
+        <Table data={schedules[name]} currentTime={now} />
       {/each}
     {/if}
   </section>
@@ -51,6 +66,11 @@
     color: #ff3e00;
     text-transform: uppercase;
     font-weight: 300;
+  }
+
+  a {
+    text-decoration: underline;
+    color: inherit;
   }
 
   @media (min-width: 640px) {

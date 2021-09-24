@@ -1,4 +1,3 @@
-from typing import Mapping
 from flask import Flask
 from flask_cors import CORS
 
