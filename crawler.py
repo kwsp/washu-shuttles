@@ -2,11 +2,10 @@ from typing import List
 import json
 
 from bs4 import BeautifulSoup
-import numpy as np
 import requests
 import pandas as pd
 
-import db
+# import db
 
 req_params = {
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -47,10 +46,10 @@ def main():
         name_week = name + " Weekday"
         name_weekend = name + " Weekend"
         for i in range(len(dfs)):
-            dfs[i].replace(np.nan, '', inplace=True)
-            
-        db.update(name_week, dfs[0])
-        db.update(name_weekend, dfs[1])
+            dfs[i].replace(float("nan"), "", inplace=True)
+
+        # db.update(name_week, dfs[0])
+        # db.update(name_weekend, dfs[1])
 
         json_record[name_week] = dfs[0].to_dict("list")
         json_record[name_weekend] = dfs[1].to_dict("list")
