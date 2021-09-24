@@ -14,7 +14,7 @@
   })
 
   $: isWeekend = now.getDay() === 6 || now.getDay() === 0
-  $: suffix = isWeekend ? 'Weekday' : 'Weekend'
+  $: suffix = isWeekend ? 'Weekend' : 'Weekday'
 
   $: scheduleNames = Object.keys(schedules).filter((name) =>
     name.endsWith(suffix)
@@ -32,6 +32,11 @@
   <a href="https://parking.wustl.edu/campus-shuttle-system/">
     <h2>WashU Shuttles</h2>
   </a>
+
+  <p>
+    A sane alternative to Washington University in St. Louis Parking &
+    Transportation's shuttle schedule website.
+  </p>
 
   <section>
     {#if !schedules}
@@ -52,6 +57,33 @@
       {/each}
     {/if}
   </section>
+
+  <br />
+
+  <footer>
+    <p>
+      Data built from
+      <a href="https://parking.wustl.edu/campus-shuttle-system/">
+        <span>WashU Parking & Transportation</span>
+      </a>
+      and
+      <a href="https://www.metrostlouis.org/">
+        <span>Metro STL</span>
+      </a>
+      .
+    </p>
+
+    <p>
+      This site is the result of my frustration with WashU Parking &
+      Transportation's website and my attempt at a more accessible bus schedule
+      table for myself. If anything is not accurate or if you have any
+      suggestions for improvement, please email me at tnie at wustl dot edu.
+      Source code hosted on Github:
+      <a href="https://github.com/kwsp/washu-shuttles/">
+        https://github.com/kwsp/washu-shuttles/
+      </a>
+    </p>
+  </footer>
 </main>
 
 <style>

@@ -1,4 +1,5 @@
 from typing import List
+from datetime import datetime
 import json
 
 from bs4 import BeautifulSoup
@@ -17,10 +18,14 @@ req_params = {
 }
 
 urls = {
-    "Lewis Center Shuttle": "https://parking.wustl.edu/items/lewis-center/",
-    "Delmar Loop Shuttle": "https://parking.wustl.edu/items/delmar-loop/",
     "Metro Green Line": "https://www.metrostlouis.org/route/5-green/",
     "Campus Circulator": "https://parking.wustl.edu/items/campus-circulator/",
+    "Lewis Center Shuttle": "https://parking.wustl.edu/items/lewis-center/",
+    "Delmar Loop Shuttle": "https://parking.wustl.edu/items/delmar-loop/",
+    "DeBaliviere Place Shuttle": "https://parking.wustl.edu/items/debaliviere-place/",
+    "Skinker-DeBaliviere Shuttle": "https://parking.wustl.edu/items/skinker-debaliviere/",
+    "South Campus Shuttle": "https://parking.wustl.edu/items/south-campus/",
+    "West Campus Shuttle": "https://parking.wustl.edu/items/west-campus-shuttle/",
 }
 
 
@@ -37,6 +42,7 @@ def getTablesFromUrl(url: str) -> List[pd.DataFrame]:
 def main():
     json_record = {}
     for name, url in urls.items():
+        print(name, url)
         dfs = getTablesFromUrl(url)
 
         # first table is week day, second table is weekend
@@ -57,6 +63,10 @@ def main():
         json_record[name_weekend]["keys"] = list(dfs[1].keys())
         json_record[name_week]["src_url"] = url
         json_record[name_weekend]["src_url"] = url
+
+    # timestamp data
+    dt = datetime.now()
+    json_record["buildDate"] = f"{dt.year}-{dt.month}-{dt.day}"
 
     with open("data.json", "w") as fp:
         json.dump(json_record, fp)
