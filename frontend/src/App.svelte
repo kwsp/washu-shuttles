@@ -70,6 +70,10 @@
       <a href="https://www.metrostlouis.org/">
         <span>Metro STL</span>
       </a>
+      on
+      <span>
+        {schedules['buildDate']}
+      </span>
       .
     </p>
 
