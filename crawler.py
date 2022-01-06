@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 from datetime import datetime
 import json
 
@@ -6,7 +6,6 @@ from bs4 import BeautifulSoup
 import requests
 import pandas as pd
 
-# import db
 
 req_params = {
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -17,8 +16,11 @@ req_params = {
     "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.58 Safari/537.36",
 }
 
-urls = {
+metrostl_urls = {
     "Metro Green Line": "https://www.metrostlouis.org/route/5-green/",
+}
+
+washu_urls = {
     "Campus Circulator": "https://parking.wustl.edu/items/campus-circulator/",
     "Lewis Center Shuttle": "https://parking.wustl.edu/items/lewis-center/",
     "Delmar Loop Shuttle": "https://parking.wustl.edu/items/delmar-loop/",
@@ -38,31 +40,45 @@ def getTablesFromUrl(url: str) -> List[pd.DataFrame]:
     dfs = pd.read_html(str(tables))
     return dfs
 
+def getTablesFromWashuUrl(url: str) -> Dict[str, pd.DataFrame]:
+    resp = requests.get(url, req_params)
+    soup = BeautifulSoup(resp.text, "lxml")
+    tables = soup.find_all("table")
+    dfs = pd.read_html(str(tables))
+    
+    mp = {}
+    for i, table in enumerate(tables):
+        name = table.parent.parent.find_previous_sibling("dt").text
+        mp[name] = dfs[i]
+        
+    return mp
+
 
 def main():
     json_record = {}
-    for name, url in urls.items():
-        print(name, url)
-        dfs = getTablesFromUrl(url)
+    shuttle_names = []
 
-        # first table is week day, second table is weekend
-        # for metro, second is saturday and third is sunday but
-        # for metro green line they are the same.
-        assert len(dfs) >= 2
-        name_week = name + " Weekday"
-        name_weekend = name + " Weekend"
-        for i in range(len(dfs)):
-            dfs[i].replace(float("nan"), "", inplace=True)
+    # build washu shuttles data
+    for name, url in washu_urls.items():
+        print(name, url)
+        mp = getTablesFromWashuUrl(url)
+
+        assert len(mp) >= 2
+        for k in mp.keys():
+            mp[k].fillna("", inplace=True)
 
         # db.update(name_week, dfs[0])
         # db.update(name_weekend, dfs[1])
+        json_record[name] = {}
+        json_record[name]["srcUrl"] = url
+        json_record[name]["keys"] = list(mp.keys())
+        for key, df in mp.items():
+            json_record[name][key] = df.to_dict("list")
+            json_record[name][key]["keys"] = list(df.keys())
 
-        json_record[name_week] = dfs[0].to_dict("list")
-        json_record[name_weekend] = dfs[1].to_dict("list")
-        json_record[name_week]["keys"] = list(dfs[0].keys())
-        json_record[name_weekend]["keys"] = list(dfs[1].keys())
-        json_record[name_week]["src_url"] = url
-        json_record[name_weekend]["src_url"] = url
+        shuttle_names.append(name)
+    
+    json_record["shuttleNames"] = shuttle_names
 
     # timestamp data
     dt = datetime.now()

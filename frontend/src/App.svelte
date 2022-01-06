@@ -1,11 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte'
 
-  import Table from './Table.svelte'
+  import Schedule from './Schedule.svelte'
 
   export let apiUrl: string
 
-  let schedules: Object = {}
+  let schedules: Object = {
+    shuttleNames: [],
+  }
   let now = new Date()
   onMount(() => {
     const interval = setInterval(() => {
@@ -14,11 +16,12 @@
   })
 
   $: isWeekend = now.getDay() === 6 || now.getDay() === 0
-  $: suffix = isWeekend ? 'Weekend' : 'Weekday'
+  /*$: suffix = isWeekend ? 'Weekend' : 'Weekday'*/
 
-  $: scheduleNames = Object.keys(schedules).filter((name) =>
-    name.endsWith(suffix)
-  )
+  /*$: scheduleNames = Object.keys(schedules).filter((name) =>*/
+  /*name.endsWith(suffix)*/
+  /*)*/
+  /*$: console.log("Schedule names", scheduleNames)*/
 
   fetch(apiUrl)
     .then((resp) => resp.json())
@@ -43,17 +46,9 @@
       <p>Waiting for data to load...</p>
     {:else}
       <p>{now}</p>
-      {#each scheduleNames as name}
-        <a
-          href={'src_url' in schedules[name]
-            ? schedules[name]['src_url']
-            : './'}
-        >
-          <h3>
-            {name}
-          </h3>
-        </a>
-        <Table data={schedules[name]} currentTime={now} />
+      <!-- {@debug schedules} -->
+      {#each schedules['shuttleNames'] as name}
+        <Schedule name={name} schedule={schedules[name]} time={now} />
       {/each}
     {/if}
   </section>
