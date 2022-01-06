@@ -2,86 +2,61 @@
   export let data: JSON
   export let currentTime: Date
 
-  interface Entry {
-    time: Date
-    str: string
-    ampm: string
-  }
-
   interface Schedule {
-    [stop: string]: Array<Entry | null>
+    [stop: string]: Array<string | null>
   }
 
   // if ordered keys provided, use that
   const keys: Array<string> = data['keys'] || Object.keys(data)
-  const ampm: Array<string> = data[keys[0]].map(
-    (entry) => entry.match(/[AaPp][Mm]/)[0]
-  )
 
-  function transformEntry(s: string | null): Entry | null {
-    if (!s) {
-      return null
-    }
+  function parseTime(s: string): Date {
     const res = s.match(/(1[0-2]|0?[1-9]):([0-5][0-9]) ?([AaPp][Mm])/)
-    try {
-      const hour = parseInt(res[1])
-      const minute = parseInt(res[2])
-      const ampm = res[3]
 
-      const d = new Date()
-      d.setHours(ampm.match(/[Pp][Mm]/) ? (hour % 12) + 12 : hour)
-      d.setMinutes(minute)
-      return {
-        time: d,
-        str:
-          hour.toString().padStart(2, '0') +
-          ':' +
-          minute.toString().padStart(2, '0'),
-        ampm: ampm,
+    const hour = parseInt(res[1])
+    const minute = parseInt(res[2])
+    const ampm = res[3]
+
+    const d = new Date()
+    d.setMinutes(minute)
+    if (ampm.match(/[Pp][Mm]/)) {
+      // PM
+      d.setHours((hour % 12) + 12)
+    } else {
+      // AM
+      d.setHours(hour)
+      if (hour < 5 || hour == 12) {
+        d.setDate(d.getDate() + 1)
       }
-    } catch (err) {}
+    }
+    return d
   }
 
   function transformSchedule(data) {
-    let obj = {}
-    for (const key of keys) {
-      obj[key] = data[key].map((s) => transformEntry(s))
-    }
-    return obj
+    return data
   }
 
   const schedule: Schedule = transformSchedule(data)
 
   // Predicate to check if this bus will arrive in the future
-  const isFuture = (entry: Entry | null): Boolean => {
-    if (!entry) {
-      return false
-    }
-    return currentTime < entry.time
+  function isFuture(entry: string | null): Boolean {
+    return entry != null && currentTime < parseTime(entry)
+  }
+
+  // get CSS class based on time to determine highlight
+  function getClass(entry: string): string {
+    return entry && isFuture(entry) ? 'highlight' : ''
   }
 </script>
 
 <div class="table-container">
   <table>
-    <thead>
-      <tr>
-        <th />
-        {#each ampm as val}
-          <th>{val}</th>
-        {/each}
-      </tr>
-    </thead>
-
     <tbody>
       {#each keys as key}
         <tr>
           <th class="fixed">{key}</th>
-          {#each data[keys[0]] as _, i}
-            <td
-              class={schedule[key][i] && isFuture(schedule[key][i])
-                ? 'highlight'
-                : ''}
-              >{schedule[key][i] ? schedule[key][i].str : ''}
+          {#each schedule[key] as entry, i}
+            <td class={getClass(entry)}>
+              {entry}
             </td>
           {/each}
         </tr>
