@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   export let data: JSON
   export let currentTime: Date
 
@@ -11,7 +12,9 @@
 
   function parseTime(s: string): Date {
     const res = s.match(/(1[0-2]|0?[1-9]):([0-5][0-9]) ?([AaPp][Mm])/)
-
+    if (!res) {
+      return new Date()
+    }
     const hour = parseInt(res[1])
     const minute = parseInt(res[2])
     const ampm = res[3]
@@ -37,15 +40,44 @@
 
   const schedule: Schedule = transformSchedule(data)
 
+  // Bisect the array given a predicate
+  // Check the element after the first one found to make sure
+  // there isn't a mistake. Otherwise, AM/PM typos will mess it up.
+  function bisect(
+    arr: Array<string>,
+    fn: (arg0: string | null) => Boolean
+  ): number {
+    let i = arr.findIndex((v) => fn(v))
+    if (!isFuture(arr[i + 1])) {
+      i += 1 + arr.slice(i + 1).findIndex((v) => fn(v))
+    }
+    return i
+  }
+
+  function bisectAll(schedule: Schedule) {
+    const indices = {}
+    for (const key of keys) {
+      indices[key] = bisect(schedule[key], isFuture)
+    }
+    return indices
+  }
+
+  const bisectIndices = bisectAll(schedule)
+
   // Predicate to check if this bus will arrive in the future
   function isFuture(entry: string | null): Boolean {
-    return entry != null && currentTime < parseTime(entry)
+    return entry ? currentTime < parseTime(entry) : false
   }
 
   // get CSS class based on time to determine highlight
-  function getClass(entry: string): string {
-    return entry && isFuture(entry) ? 'highlight' : ''
+  function getClass(key: string, i: number): string {
+    return i >= bisectIndices[key] ? 'highlight' : ''
   }
+
+  let nowElems = {}
+  onMount(() => {
+    keys.forEach((key) => nowElems[key].scrollIntoView())
+  })
 </script>
 
 <div class="table-container">
@@ -55,9 +87,13 @@
         <tr>
           <th class="fixed">{key}</th>
           {#each schedule[key] as entry, i}
-            <td class={getClass(entry)}>
-              {entry}
-            </td>
+            {#if i == bisectIndices[key]}
+              <td class="highlight" bind:this={nowElems[key]}>{entry}</td>
+            {:else if i > bisectIndices[key]}
+              <td class="highlight">{entry}</td>
+            {:else}
+              <td>{entry}</td>
+            {/if}
           {/each}
         </tr>
       {/each}
