@@ -8,6 +8,10 @@
   }
   const schedule: Schedule = data
 
+  if (data == undefined) {
+    console.log('warning: table data undefined')
+  }
+
   // if ordered keys provided, use that
   const keys: Array<string> = data['keys'] || Object.keys(data)
 
@@ -42,12 +46,12 @@
     arr: Array<string>,
     fn: (arg0: string | null) => Boolean
   ): number {
-    let i = arr.findIndex((v) => fn(v))
+    const i = arr.findIndex((v) => fn(v))
     if (i == -1) {
       return arr.length
     }
-    if (i < arr.length && !isFuture(arr[i + 1])) {
-      i += 1 + arr.slice(i + 1).findIndex((v) => fn(v))
+    if (!isFuture(arr[i + 1])) {
+      return i + 1 + bisect(arr.slice(i + 1), fn)
     }
     return i
   }
@@ -74,7 +78,7 @@
 
   let nowElems = {}
   onMount(() => {
-    keys.forEach((key) => nowElems[key].scrollIntoView())
+    keys.forEach((key) => nowElems[key] && nowElems[key].scrollIntoView())
   })
 </script>
 
