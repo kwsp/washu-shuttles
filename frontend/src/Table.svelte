@@ -1,11 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  export let data: JSON
+  export let data: Schedule
   export let currentTime: Date
 
   interface Schedule {
     [stop: string]: Array<string | null>
   }
+  const schedule: Schedule = data
 
   // if ordered keys provided, use that
   const keys: Array<string> = data['keys'] || Object.keys(data)
@@ -34,12 +35,6 @@
     return d
   }
 
-  function transformSchedule(data) {
-    return data
-  }
-
-  const schedule: Schedule = transformSchedule(data)
-
   // Bisect the array given a predicate
   // Check the element after the first one found to make sure
   // there isn't a mistake. Otherwise, AM/PM typos will mess it up.
@@ -48,7 +43,10 @@
     fn: (arg0: string | null) => Boolean
   ): number {
     let i = arr.findIndex((v) => fn(v))
-    if (!isFuture(arr[i + 1])) {
+    if (i == -1) {
+      return arr.length
+    }
+    if (i < arr.length && !isFuture(arr[i + 1])) {
       i += 1 + arr.slice(i + 1).findIndex((v) => fn(v))
     }
     return i

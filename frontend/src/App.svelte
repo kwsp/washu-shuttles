@@ -15,14 +15,6 @@
     }, 1000)
   })
 
-  $: isWeekend = now.getDay() === 6 || now.getDay() === 0
-  /*$: suffix = isWeekend ? 'Weekend' : 'Weekday'*/
-
-  /*$: scheduleNames = Object.keys(schedules).filter((name) =>*/
-  /*name.endsWith(suffix)*/
-  /*)*/
-  /*$: console.log("Schedule names", scheduleNames)*/
-
   fetch(apiUrl)
     .then((resp) => resp.json())
     .then((res) => {
@@ -46,9 +38,8 @@
       <p>Waiting for data to load...</p>
     {:else}
       <p>{now}</p>
-      <!-- {@debug schedules} -->
       {#each schedules['shuttleNames'] as name}
-        <Schedule name={name} schedule={schedules[name]} time={now} />
+        <Schedule {name} schedule={schedules[name]} time={now} />
       {/each}
     {/if}
   </section>
@@ -59,17 +50,11 @@
     <p>
       Data built from
       <a href="https://parking.wustl.edu/campus-shuttle-system/">
-        <span>WashU Parking & Transportation</span>
+        WashU Parking & Transportation
       </a>
       and
-      <a href="https://www.metrostlouis.org/">
-        <span>Metro STL</span>
-      </a>
-      on
-      <span>
-        {schedules['buildDate']}
-      </span>
-      .
+      <a href="https://www.metrostlouis.org/">Metro STL</a>
+      on {schedules['buildDate']}.
     </p>
 
     <p>
