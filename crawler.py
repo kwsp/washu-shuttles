@@ -1,8 +1,10 @@
-from typing import Dict, List
+from typing import Dict
+from enum import Enum
 from datetime import datetime
 import json
 
-from bs4 import BeautifulSoup
+import bs4
+from bs4 import BeautifulSoup, Tag
 import requests
 import pandas as pd
 
@@ -31,62 +33,59 @@ washu_urls = {
 }
 
 
-def getTablesFromUrl(url: str) -> List[pd.DataFrame]:
-    resp = requests.get(url, req_params)
-    soup = BeautifulSoup(resp.text, "lxml")
-
-    tables = soup.find_all("table")
-
-    dfs = pd.read_html(str(tables))
-    return dfs
-
-def getTablesFromWashuUrl(url: str) -> Dict[str, pd.DataFrame]:
-    resp = requests.get(url, req_params)
-    soup = BeautifulSoup(resp.text, "lxml")
-    tables = soup.find_all("table")
-    dfs = pd.read_html(str(tables))
-    
-    mp = {}
-    for i, table in enumerate(tables):
-        name = table.parent.parent.find_previous_sibling("dt").text
-        mp[name] = dfs[i]
-        
-    return mp
+class URLType(Enum):
+    WASHU = 1
+    METRO = 2
 
 
-def main():
+def _get_Washu_tname(table: bs4.element.Tag) -> str:
+    return table.parent.parent.find_previous_sibling("dt").text
+
+
+def _get_Metro_tname(table: bs4.element.Tag) -> str:
+    return table.parent.get("id").split("-")[-1].title()
+
+
+table_name_getter = {
+    URLType.WASHU: _get_Washu_tname,
+    URLType.METRO: _get_Metro_tname,
+}
+
+
+def get_tables_from_url(url: str, url_type: URLType) -> Dict[str, pd.DataFrame]:
+    tables = BeautifulSoup(requests.get(url, req_params).text, "lxml").find_all("table")
+    dfs = [df.fillna("") for df in pd.read_html(str(tables))]
+    return {
+        table_name_getter[url_type](table): dfs[i] for i, table in enumerate(tables)
+    }
+
+
+if __name__ == "__main__":
     json_record = {}
     shuttle_names = []
+
+    def add_to_record(name: str, url: str, mp: Dict[str, pd.DataFrame]):
+        record = {"srcUrl": url, "keys": list(mp.keys())}
+        for key, df in mp.items():
+            record[key] = df.to_dict("list")
+            record[key]["keys"] = list(df.keys())
+        json_record[name] = record
+        shuttle_names.append(name)
+
+    # build metro data
+    for name, url in metrostl_urls.items():
+        print(name, url)
+        mp = get_tables_from_url(url, URLType.METRO)
+        add_to_record(name, url, mp)
 
     # build washu shuttles data
     for name, url in washu_urls.items():
         print(name, url)
-        mp = getTablesFromWashuUrl(url)
+        mp = get_tables_from_url(url, URLType.WASHU)
+        add_to_record(name, url, mp)
 
-        assert len(mp) >= 2
-        for k in mp.keys():
-            mp[k].fillna("", inplace=True)
-
-        # db.update(name_week, dfs[0])
-        # db.update(name_weekend, dfs[1])
-        json_record[name] = {}
-        json_record[name]["srcUrl"] = url
-        json_record[name]["keys"] = list(mp.keys())
-        for key, df in mp.items():
-            json_record[name][key] = df.to_dict("list")
-            json_record[name][key]["keys"] = list(df.keys())
-
-        shuttle_names.append(name)
-    
     json_record["shuttleNames"] = shuttle_names
-
-    # timestamp data
-    dt = datetime.now()
-    json_record["buildDate"] = f"{dt.year}-{dt.month}-{dt.day}"
+    json_record["buildDate"] = datetime.now().strftime("%b %d, %Y")
 
     with open("data.json", "w") as fp:
         json.dump(json_record, fp)
-
-
-if __name__ == "__main__":
-    main()
