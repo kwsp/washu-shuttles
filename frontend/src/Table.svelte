@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { afterUpdate } from 'svelte'
   export let data: Schedule
   export let currentTime: Date
 
@@ -7,12 +7,8 @@
     [stop: string]: Array<string | null>
   }
 
-  // if (data == undefined) {
-  //   console.log('warning: table data undefined')
-  // }
-
-  // if ordered keys provided, use that
-  const keys: Array<string> = data['keys'] || Object.keys(data)
+  let keys: Array<string>
+  $: keys = data['keys'] || Object.keys(data)
 
   // Predicate to check if this bus will arrive in the future
   function isFuture(entry: string | null, now: Date): Boolean {
@@ -25,6 +21,7 @@
     if (!match) {
       return time
     }
+
     const hour = parseInt(match[1])
     const minute = parseInt(match[2])
     const ampm = match[3]
@@ -43,9 +40,11 @@
     return time
   }
 
-  // Given an array and a predicate, return the index of the element that satisfies the predicate.
-  // Checks the element after the first one found to make sure there isn't a mistake. 
-  // Otherwise, AM/PM typos in the data will mess it up.
+  /**
+   * Given an array and a predicate, return the index of the element that satisfies the predicate.
+   * Checks the element after the first one found to make sure there isn't a mistake.
+   * Otherwise, AM/PM typos in the data will mess it up.
+   */
   function bisect(
     arr: Array<string>,
     fn: (arg0: string | null) => Boolean
@@ -70,16 +69,20 @@
   }
 
   $: bisectIndices = bisectAll(data, currentTime)
-
-  // get CSS class based on time to determine highlight
-  function getClass(key: string, i: number): string {
-    return i >= bisectIndices[key] ? 'highlight' : ''
+  
+  function scrollCurrentIntoView() {
+    const options = {
+      inline: "center"
+    }
+    const key = keys.find((key) => nowElems[key]) // find first key that exists in nowElems
+    key && nowElems[key].scrollIntoView(options) // scroll it into view
   }
 
   let nowElems = {}
-  onMount(() => {
-    const key = keys.find((key) => nowElems[key]) // find first key that exists in nowElems
-    key && nowElems[key].scrollIntoView() // scroll it into view
+  afterUpdate(() => {
+    const [x, y] = [window.scrollX, window.scrollY]
+    scrollCurrentIntoView()
+    window.scrollTo(x, y)
   })
 </script>
 
@@ -88,7 +91,7 @@
     <tbody>
       {#each keys as key}
         <tr>
-          <th class="fixed">{key}</th>
+          <th>{key}</th>
           {#each data[key] as entry, i}
             {#if i == bisectIndices[key]}
               <td class="highlight" bind:this={nowElems[key]}>{entry}</td>
@@ -116,14 +119,6 @@
     border-top: 1px solid grey;
   }
 
-  th,
-  td {
-    white-space: nowrap;
-    padding: 5px 10px;
-    font-family: Arial;
-    border: 1px solid grey;
-  }
-
   th:first-child,
   td:first-child {
     position: sticky;
@@ -137,33 +132,42 @@
     z-index: 11;
   }
 
-  tr th {
-    position: sticky;
-    top: 0;
-    z-index: 9;
-    background: #fff;
-  }
-
   td,
   th {
     text-align: left;
-    vertical-align: top;
     padding: 5px 10px;
     margin: 0;
     border: 1px solid grey;
-    white-space: nowrap;
     border-top-width: 0px;
+    white-space: nowrap;
   }
 
   tbody tr {
     border-bottom: 1px solid #dddddd;
   }
 
-  tbody tr:nth-of-type(even) {
-    background-color: #f8f8f8;
+  tbody tr:nth-of-type(odd) {
+    background-color: #fff;
   }
 
-  .highlight {
+  tbody tr:nth-of-type(even) {
+    background-color: #dadada;
+  }
+
+  tr:nth-of-type(even) > .highlight {
     background-color: rgb(138, 202, 132);
   }
+
+  tr:nth-of-type(odd) > .highlight {
+    background-color: rgb(138, 202, 132, 0.5);
+  }
+
+  /* Minimum width */
+  @media (max-width: 35rem) {
+    th {
+      white-space: normal;
+    }
+  }
+
+
 </style>

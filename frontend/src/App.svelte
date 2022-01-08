@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onMount, afterUpdate } from 'svelte'
 
   import Schedule from './Schedule.svelte'
 
@@ -11,7 +11,6 @@
   }
 
   let currentTime = new Date()
-  let titleElem
 
   const dateOptions = {
     weekday: 'long',
@@ -22,7 +21,6 @@
     minute: 'numeric',
   } as const
 
-  
   onMount(() => {
     const interval = setInterval(() => {
       const newTime = new Date()
@@ -30,6 +28,10 @@
         currentTime = newTime
       }
     }, 2000)
+  })
+
+  afterUpdate(() => {
+    window.scrollTo(0, 0)
   })
 
   fetch(apiUrl)
@@ -41,10 +43,7 @@
 </script>
 
 <main>
-  <a
-    href="https://parking.wustl.edu/campus-shuttle-system/"
-    bind:this={titleElem}
-  >
+  <a href="https://parking.wustl.edu/campus-shuttle-system/">
     <h2>WashU Shuttles</h2>
   </a>
 

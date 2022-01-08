@@ -1,6 +1,5 @@
 <script lang="ts">
   import Table from './Table.svelte'
-  // import Radio from './Radio.svelte'
 
   export let schedule: Object
   export let name: string
@@ -8,15 +7,6 @@
   export let breakEndDate: Date = new Date('2022-01-31T00:00:00')
 
   const keys: Array<string> = schedule['keys']
-  //   const options = keys.map((key) => {
-  //     return {
-  //       value: key,
-  //       label: key,
-  //     }
-  //   })
-
-  /*let radioValue = keys[0]*/
-  /*$: currentSchedule = schedule[radioValue]*/
 
   function initKey(time: Date, keys: Array<string>): string {
     if (time < breakEndDate) {
@@ -50,13 +40,13 @@
   <a href={'srcUrl' in schedule ? schedule['srcUrl'] : './'}>
     <h3>{name}</h3>
   </a>
-  <span>Schedule: {currentKey}</span>
-
-  <!-- <Radio
-    {options}
-    fontSize={16}
-    bind:userSelected={radioValue}
-  /> -->
+  <form>
+    <select bind:value={currentKey}>
+      {#each keys as key}
+        <option value={key}>{key}</option>
+      {/each}
+    </select>
+  </form>
   <Table data={currentSchedule} bind:currentTime={time} />
 </div>
 
