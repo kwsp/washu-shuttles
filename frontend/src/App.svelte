@@ -26,7 +26,6 @@
   onMount(() => {
     const interval = setInterval(() => {
       const newTime = new Date()
-      console.log(currentTime.getMinutes())
       if (newTime.getMinutes() != currentTime.getMinutes()) {
         currentTime = newTime
       }

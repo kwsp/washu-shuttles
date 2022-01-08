@@ -5,44 +5,45 @@
   export let schedule: Object
   export let name: string
   export let time: Date
+  export let breakEndDate: Date = new Date('2022-01-31T00:00:00')
 
   const keys: Array<string> = schedule['keys']
-//   const options = keys.map((key) => {
-//     return {
-//       value: key,
-//       label: key,
-//     }
-//   })
+  //   const options = keys.map((key) => {
+  //     return {
+  //       value: key,
+  //       label: key,
+  //     }
+  //   })
 
   /*let radioValue = keys[0]*/
   /*$: currentSchedule = schedule[radioValue]*/
 
-  function initKey(): string {
-    let currentKey = keys[0]
-    const isWeekend = time.getDay() === 6 || time.getDay() === 0
-    if (isWeekend) {
-        const re = /weekend|Weekend|saturday|Saturday/
-        const newKey = keys.find((k) => k.match(re))
-        currentKey = newKey ? newKey : currentKey
-    } else {
-        const re = /weekday|Weekday/
-        const newKey = keys.find((k) => k.match(re))
-        currentKey = newKey ? newKey : currentKey
+  function initKey(time: Date, keys: Array<string>): string {
+    if (time < breakEndDate) {
+      // Check if break schedule first.
+      const re = /break/i
+      const key = keys.find((k) => k.match(re))
+      if (key) {
+        return key
+      }
     }
 
-    if (time < new Date('2022-01-17T00:00:00')) {
-      // Winter break time
-      const re = /break|Break/
-      const newKey = keys.find((k) => k.match(re))
-      currentKey = newKey ? newKey : currentKey
+    let re = /weekday/i
+    switch (time.getDay()) {
+      case 6:
+        re = /weekend|saturday/i
+        break
+      case 0:
+        re = /weekend|sunday/i
+        break
     }
-    return currentKey
+
+    const newKey = keys.find((k) => k.match(re))
+    return newKey ? newKey : keys[0]
   }
 
-  let currentKey = initKey()
+  let currentKey = initKey(time, keys)
   $: currentSchedule = schedule[currentKey]
-  
-
 </script>
 
 <div>

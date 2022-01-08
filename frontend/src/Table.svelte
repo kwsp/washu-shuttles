@@ -43,9 +43,9 @@
     return time
   }
 
-  // Bisect the array given a predicate
-  // Check the element after the first one found to make sure
-  // there isn't a mistake. Otherwise, AM/PM typos will mess it up.
+  // Given an array and a predicate, return the index of the element that satisfies the predicate.
+  // Checks the element after the first one found to make sure there isn't a mistake. 
+  // Otherwise, AM/PM typos in the data will mess it up.
   function bisect(
     arr: Array<string>,
     fn: (arg0: string | null) => Boolean
