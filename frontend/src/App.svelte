@@ -43,13 +43,13 @@
 </script>
 
 <main>
-  <a href="https://parking.wustl.edu/campus-shuttle-system/">
-    <h2>WashU Shuttles</h2>
-  </a>
+  <a href="./"><h2>WashU Shuttles</h2></a>
 
   <p>
-    A sane alternative to Washington University in St. Louis Parking &
-    Transportation's shuttle schedule website.
+    A sane alternative to Washington University in St. Louis
+    <a href="https://parking.wustl.edu/campus-shuttle-system/">
+      Parking & Transportation's shuttle schedule website
+    </a>.
   </p>
   <p>{currentTime.toLocaleDateString('en-US', dateOptions)}</p>
 
