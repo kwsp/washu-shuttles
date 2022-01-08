@@ -6,37 +6,41 @@
   interface Schedule {
     [stop: string]: Array<string | null>
   }
-  const schedule: Schedule = data
 
-  if (data == undefined) {
-    console.log('warning: table data undefined')
-  }
+  // if (data == undefined) {
+  //   console.log('warning: table data undefined')
+  // }
 
   // if ordered keys provided, use that
   const keys: Array<string> = data['keys'] || Object.keys(data)
 
-  function parseTime(s: string): Date {
-    const res = s.match(/(1[0-2]|0?[1-9]):([0-5][0-9]) ?([AaPp][Mm])/)
-    if (!res) {
-      return new Date()
-    }
-    const hour = parseInt(res[1])
-    const minute = parseInt(res[2])
-    const ampm = res[3]
+  // Predicate to check if this bus will arrive in the future
+  function isFuture(entry: string | null, now: Date): Boolean {
+    return entry ? now < parseTime(entry) : false
+  }
 
-    const d = new Date()
-    d.setMinutes(minute)
+  function parseTime(s: string): Date {
+    const time = new Date()
+    const match = s.match(/(1[0-2]|0?[1-9]):([0-5][0-9]) ?([AaPp][Mm])/)
+    if (!match) {
+      return time
+    }
+    const hour = parseInt(match[1])
+    const minute = parseInt(match[2])
+    const ampm = match[3]
+
+    time.setMinutes(minute)
     if (ampm.match(/[Pp][Mm]/)) {
       // PM
-      d.setHours((hour % 12) + 12)
+      time.setHours((hour % 12) + 12)
     } else {
       // AM
-      d.setHours(hour)
+      time.setHours(hour)
       if (hour < 5 || hour == 12) {
-        d.setDate(d.getDate() + 1)
+        time.setDate(time.getDate() + 1)
       }
     }
-    return d
+    return time
   }
 
   // Bisect the array given a predicate
@@ -50,26 +54,22 @@
     if (i == -1) {
       return arr.length
     }
-    if (!isFuture(arr[i + 1])) {
+    if (!fn(arr[i + 1])) {
       return i + 1 + bisect(arr.slice(i + 1), fn)
     }
     return i
   }
 
-  function bisectAll(schedule: Schedule) {
+  function bisectAll(data: Schedule, currentTime: Date) {
     const indices = {}
+    const fn = (entry: string) => isFuture(entry, currentTime)
     for (const key of keys) {
-      indices[key] = bisect(schedule[key], isFuture)
+      indices[key] = bisect(data[key], fn)
     }
     return indices
   }
 
-  const bisectIndices = bisectAll(schedule)
-
-  // Predicate to check if this bus will arrive in the future
-  function isFuture(entry: string | null): Boolean {
-    return entry ? currentTime < parseTime(entry) : false
-  }
+  $: bisectIndices = bisectAll(data, currentTime)
 
   // get CSS class based on time to determine highlight
   function getClass(key: string, i: number): string {
@@ -78,7 +78,8 @@
 
   let nowElems = {}
   onMount(() => {
-    keys.forEach((key) => nowElems[key] && nowElems[key].scrollIntoView())
+    const key = keys.find((key) => nowElems[key]) // find first key that exists in nowElems
+    key && nowElems[key].scrollIntoView() // scroll it into view
   })
 </script>
 
@@ -88,7 +89,7 @@
       {#each keys as key}
         <tr>
           <th class="fixed">{key}</th>
-          {#each schedule[key] as entry, i}
+          {#each data[key] as entry, i}
             {#if i == bisectIndices[key]}
               <td class="highlight" bind:this={nowElems[key]}>{entry}</td>
             {:else if i > bisectIndices[key]}

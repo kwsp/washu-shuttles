@@ -17,28 +17,32 @@
   /*let radioValue = keys[0]*/
   /*$: currentSchedule = schedule[radioValue]*/
 
-  let currentKey = keys[0]
+  function initKey(): string {
+    let currentKey = keys[0]
+    const isWeekend = time.getDay() === 6 || time.getDay() === 0
+    if (isWeekend) {
+        const re = /weekend|Weekend|saturday|Saturday/
+        const newKey = keys.find((k) => k.match(re))
+        currentKey = newKey ? newKey : currentKey
+    } else {
+        const re = /weekday|Weekday/
+        const newKey = keys.find((k) => k.match(re))
+        currentKey = newKey ? newKey : currentKey
+    }
+
+    if (time < new Date('2022-01-17T00:00:00')) {
+      // Winter break time
+      const re = /break|Break/
+      const newKey = keys.find((k) => k.match(re))
+      currentKey = newKey ? newKey : currentKey
+    }
+    return currentKey
+  }
+
+  let currentKey = initKey()
   $: currentSchedule = schedule[currentKey]
   
-  
-  const isWeekend = time.getDay() === 6 || time.getDay() === 0
-  if (isWeekend) {
-      const re = /weekend|Weekend|saturday|Saturday/
-      const newKey = keys.find((k) => k.match(re))
-      currentKey = newKey ? newKey : currentKey
-  } else {
-      const re = /weekday|Weekday/
-      const newKey = keys.find((k) => k.match(re))
-      currentKey = newKey ? newKey : currentKey
-  }
 
-
-  if (time < new Date('2022-01-17T00:00:00')) {
-    // Winter break time
-    const re = /break|Break/
-    const newKey = keys.find((k) => k.match(re))
-    currentKey = newKey ? newKey : currentKey
-  }
 </script>
 
 <div>
@@ -52,7 +56,7 @@
     fontSize={16}
     bind:userSelected={radioValue}
   /> -->
-  <Table data={currentSchedule} currentTime={time} />
+  <Table data={currentSchedule} bind:currentTime={time} />
 </div>
 
 <style>

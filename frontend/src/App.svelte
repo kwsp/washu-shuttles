@@ -7,12 +7,30 @@
 
   let schedules: Object = {
     shuttleNames: [],
+    buildDate: '',
   }
-  let now = new Date()
+
+  let currentTime = new Date()
+  let titleElem
+
+  const dateOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+  } as const
+
+  
   onMount(() => {
     const interval = setInterval(() => {
-      now = new Date()
-    }, 1000)
+      const newTime = new Date()
+      console.log(currentTime.getMinutes())
+      if (newTime.getMinutes() != currentTime.getMinutes()) {
+        currentTime = newTime
+      }
+    }, 2000)
   })
 
   fetch(apiUrl)
@@ -24,7 +42,10 @@
 </script>
 
 <main>
-  <a href="https://parking.wustl.edu/campus-shuttle-system/">
+  <a
+    href="https://parking.wustl.edu/campus-shuttle-system/"
+    bind:this={titleElem}
+  >
     <h2>WashU Shuttles</h2>
   </a>
 
@@ -32,14 +53,14 @@
     A sane alternative to Washington University in St. Louis Parking &
     Transportation's shuttle schedule website.
   </p>
+  <p>{currentTime.toLocaleDateString('en-US', dateOptions)}</p>
 
   <section>
     {#if !schedules}
       <p>Waiting for data to load...</p>
     {:else}
-      <p>{now}</p>
       {#each schedules['shuttleNames'] as name}
-        <Schedule {name} schedule={schedules[name]} time={now} />
+        <Schedule {name} schedule={schedules[name]} bind:time={currentTime} />
       {/each}
     {/if}
   </section>
