@@ -70,15 +70,14 @@
 
   $: bisectIndices = bisectAll(data, currentTime)
   
+  const nowElems = {}
+
   function scrollCurrentIntoView() {
-    const options = {
-      inline: "center"
-    }
-    const key = keys.find((key) => nowElems[key]) // find first key that exists in nowElems
-    key && nowElems[key].scrollIntoView(options) // scroll it into view
+    // find last key that exists in nowElems
+    const el = nowElems[keys[keys.length-1]]
+    el && el.scrollIntoView({inline: "center"})
   }
 
-  let nowElems = {}
   afterUpdate(() => {
     const [x, y] = [window.scrollX, window.scrollY]
     scrollCurrentIntoView()
