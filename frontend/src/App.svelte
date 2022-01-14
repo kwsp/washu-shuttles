@@ -44,14 +44,7 @@
 
 <main>
   <a href="./"><h2>WashU Shuttles</h2></a>
-
-  <p>
-    A sane alternative to Washington University in St. Louis
-    <a href="https://parking.wustl.edu/campus-shuttle-system/">
-      Parking & Transportation's shuttle schedule website
-    </a>.
-  </p>
-  <p>{currentTime.toLocaleDateString('en-US', dateOptions)}</p>
+  <p>Current time: {currentTime.toLocaleDateString('en-US', dateOptions)}</p>
 
   <section>
     {#if !schedules}
@@ -64,6 +57,17 @@
   </section>
 
   <br />
+  <section>
+    <p>
+      This site is my attempt at a more accessible shuttle schedule page than
+      WashU Parking & Transportation's website. If anything is not accurate or
+      if you have any suggestions for improvement, please email me at tnie at
+      wustl dot edu. Source code hosted on Github:
+      <a href="https://github.com/kwsp/washu-shuttles/">
+        https://github.com/kwsp/washu-shuttles/
+      </a>
+    </p>
+  </section>
 
   <footer>
     <p>
@@ -74,17 +78,6 @@
       and
       <a href="https://www.metrostlouis.org/">Metro STL</a>
       on {schedules['buildDate']}.
-    </p>
-
-    <p>
-      This site is the result of my frustration with WashU Parking &
-      Transportation's website and my attempt at a more accessible bus schedule
-      table for myself. If anything is not accurate or if you have any
-      suggestions for improvement, please email me at tnie at wustl dot edu.
-      Source code hosted on Github:
-      <a href="https://github.com/kwsp/washu-shuttles/">
-        https://github.com/kwsp/washu-shuttles/
-      </a>
     </p>
   </footer>
 </main>
