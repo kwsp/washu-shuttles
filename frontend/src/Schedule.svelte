@@ -9,14 +9,6 @@
   const keys: Array<string> = schedule['keys']
 
   function initKey(time: Date, keys: Array<string>): string {
-    if (time < breakEndDate) {
-      // Check if break schedule first.
-      const re = /break/i
-      const key = keys.find((k) => k.match(re))
-      if (key) {
-        return key
-      }
-    }
 
     let re = /weekday/i
     switch (time.getDay()) {
