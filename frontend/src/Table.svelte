@@ -1,7 +1,8 @@
 <script lang="ts">
   import { afterUpdate } from 'svelte'
+  import { time } from './stores'
+
   export let data: Schedule
-  export let currentTime: Date
 
   interface Schedule {
     [stop: string]: Array<string | null>
@@ -68,7 +69,7 @@
     return indices
   }
 
-  $: bisectIndices = bisectAll(data, currentTime)
+  $: bisectIndices = bisectAll(data, $time)
   
   const nowElems = {}
 
@@ -167,6 +168,4 @@
       white-space: normal;
     }
   }
-
-
 </style>

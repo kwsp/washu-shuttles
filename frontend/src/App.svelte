@@ -1,16 +1,7 @@
 <script lang="ts">
-  import { onMount, afterUpdate } from 'svelte'
-
+  import { afterUpdate } from 'svelte'
+  import { time, schedules } from './stores'
   import Schedule from './Schedule.svelte'
-
-  export let apiUrl: string
-
-  let schedules: Object = {
-    shuttleNames: [],
-    buildDate: '',
-  }
-
-  let currentTime = new Date()
 
   const dateOptions = {
     weekday: 'long',
@@ -21,39 +12,19 @@
     minute: 'numeric',
   } as const
 
-  onMount(() => {
-    const interval = setInterval(() => {
-      const newTime = new Date()
-      if (newTime.getMinutes() != currentTime.getMinutes()) {
-        currentTime = newTime
-      }
-    }, 2000)
-  })
-
   afterUpdate(() => {
     window.scrollTo(0, 0)
   })
-
-  fetch(apiUrl)
-    .then((resp) => resp.json())
-    .then((res) => {
-      schedules = res
-    })
-    .catch((err) => console.log(err))
 </script>
 
 <main>
   <a href="./"><h2>WashU Shuttles</h2></a>
-  <p>Current time: {currentTime.toLocaleDateString('en-US', dateOptions)}</p>
+  <p>Current time: {$time.toLocaleDateString('en-US', dateOptions)}</p>
 
   <section>
-    {#if !schedules}
-      <p>Waiting for data to load...</p>
-    {:else}
-      {#each schedules['shuttleNames'] as name}
-        <Schedule {name} schedule={schedules[name]} bind:time={currentTime} />
-      {/each}
-    {/if}
+    {#each $schedules.shuttleNames as name}
+      <Schedule {name} schedule={$schedules[name]} />
+    {/each}
   </section>
 
   <br />
@@ -77,7 +48,7 @@
       </a>
       and
       <a href="https://www.metrostlouis.org/">Metro STL</a>
-      on {schedules['buildDate']}.
+      on {$schedules.buildDate}.
     </p>
   </footer>
 </main>

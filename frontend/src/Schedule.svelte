@@ -1,15 +1,13 @@
 <script lang="ts">
+  import { time } from './stores'
   import Table from './Table.svelte'
 
   export let schedule: Object
   export let name: string
-  export let time: Date
-  export let breakEndDate: Date = new Date('2022-01-31T00:00:00')
 
   const keys: Array<string> = schedule['keys']
 
   function initKey(time: Date, keys: Array<string>): string {
-
     let re = /weekday/i
     switch (time.getDay()) {
       case 6:
@@ -24,7 +22,7 @@
     return newKey ? newKey : keys[0]
   }
 
-  let currentKey = initKey(time, keys)
+  let currentKey = initKey($time, keys)
   $: currentSchedule = schedule[currentKey]
 </script>
 
@@ -39,7 +37,7 @@
       {/each}
     </select>
   </form>
-  <Table data={currentSchedule} bind:currentTime={time} />
+  <Table data={currentSchedule} />
 </div>
 
 <style>
