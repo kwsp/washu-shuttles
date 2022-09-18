@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { afterUpdate } from 'svelte'
   import { time, schedules } from './stores'
   import Schedule from './Schedule.svelte'
 
@@ -12,9 +11,6 @@
     minute: 'numeric',
   } as const
 
-  afterUpdate(() => {
-    window.scrollTo(0, 0)
-  })
 </script>
 
 <main>
@@ -22,7 +18,11 @@
   <p>Current time: {$time.toLocaleDateString('en-US', dateOptions)}</p>
 
   <section>
-    {#each $schedules.shuttleNames as name}
+    {#each $schedules.shuttleNames.metro as name}
+      <Schedule {name} schedule={$schedules[name]} />
+    {/each}
+
+    {#each $schedules.shuttleNames.washu as name}
       <Schedule {name} schedule={$schedules[name]} />
     {/each}
   </section>

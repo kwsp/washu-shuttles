@@ -14,7 +14,10 @@ const apiUrl = './data.json'
 
 export const schedules = readable(
   {
-    shuttleNames: [],
+    shuttleNames: {
+      washu: [],
+      metro: [],
+    },
     buildDate: '',
   },
   (set) => {

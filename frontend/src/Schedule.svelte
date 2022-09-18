@@ -21,15 +21,22 @@
     const newKey = keys.find((k) => k.match(re))
     return newKey ? newKey : keys[0]
   }
+  const routeMapUrl: string = schedule[""]
 
   let currentKey = initKey($time, keys)
   $: currentSchedule = schedule[currentKey]
 </script>
 
 <div>
-  <a href={'srcUrl' in schedule ? schedule['srcUrl'] : './'}>
-    <h3>{name}</h3>
-  </a>
+  <h3>
+    <a href={'srcUrl' in schedule ? schedule['srcUrl'] : './'}>
+      {name} 
+    </a>
+    {#if 'routeMapUrl' in schedule}
+      (<a href={schedule['routeMapUrl']}>Route Map</a>)
+    {/if}
+  </h3>
+
   <form>
     <select bind:value={currentKey}>
       {#each keys as key}
@@ -37,6 +44,7 @@
       {/each}
     </select>
   </form>
+
   <Table data={currentSchedule} />
 </div>
 

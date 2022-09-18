@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
+from itertools import chain
 import json
 import shutil
 
@@ -40,11 +41,11 @@ metrostl_urls = {
 
 washu_urls = {
     "Campus Circulator": {"url": "https://parking.wustl.edu/items/campus-circulator/"},
-    "Lewis Center Shuttle": {"url": "https://parking.wustl.edu/items/lewis-center/"},
-    "Delmar Loop Shuttle": {"url": "https://parking.wustl.edu/items/delmar-loop/"},
     "DeBaliviere Place Shuttle": {
         "url": "https://parking.wustl.edu/items/debaliviere-place/"
     },
+    "Delmar Loop Shuttle": {"url": "https://parking.wustl.edu/items/delmar-loop/"},
+    "Lewis Center Shuttle": {"url": "https://parking.wustl.edu/items/lewis-center/"},
     "Skinker-DeBaliviere Shuttle": {
         "url": "https://parking.wustl.edu/items/skinker-debaliviere/"
     },
@@ -83,7 +84,8 @@ def get_tables_from_url(url: str, url_type: URLType) -> Dict[str, pd.DataFrame]:
 
 if __name__ == "__main__":
     json_record = {}
-    shuttle_names = []
+    metro_shuttle_names = []
+    washu_shuttle_names = []
     mutex = Lock()
 
     def add_to_record(
@@ -99,7 +101,6 @@ if __name__ == "__main__":
 
         mutex.acquire()
         json_record[name] = record
-        shuttle_names.append(name)
         mutex.release()
 
     def process_one_route(
@@ -110,23 +111,38 @@ if __name__ == "__main__":
 
 
     with ThreadPoolExecutor() as executor:
+        futures = []
+
         # build metro data
         for name, meta in metrostl_urls.items():
             url = meta["url"]
             route_map_url = meta.get("route_map_url")
             print(name, url)
-            executor.submit(
+            metro_shuttle_names.append(name)
+            fut = executor.submit(
                 lambda: process_one_route(name, URLType.METRO, url, route_map_url)
             )
+            futures.append(fut)
 
         # build washu shuttles data
         for name, meta in washu_urls.items():
             url = meta["url"]
             print(name, url)
-            executor.submit(lambda: process_one_route(name, URLType.WASHU, url, None))
+            washu_shuttle_names.append(name)
+            fut = executor.submit(lambda: process_one_route(name, URLType.WASHU, url, None))
+            futures.append(fut)
 
-    json_record["shuttleNames"] = shuttle_names
+        [f.result() for f in futures]
+
+
+    json_record["shuttleNames"] = {
+        "washu": washu_shuttle_names,
+        "metro": metro_shuttle_names,
+    }
     json_record["buildDate"] = datetime.now().strftime("%b %d, %Y")
+
+    for name in chain(washu_shuttle_names, metro_shuttle_names):
+        assert name in json_record
 
     # save to file
     fname = "data.json"
