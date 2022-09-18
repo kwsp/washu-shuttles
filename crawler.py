@@ -1,7 +1,9 @@
 from typing import Dict, Final
 from enum import Enum
-from datetime import datetime
 from pathlib import Path
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
 import json
 import shutil
 
@@ -82,6 +84,7 @@ def get_tables_from_url(url: str, url_type: URLType) -> Dict[str, pd.DataFrame]:
 if __name__ == "__main__":
     json_record = {}
     shuttle_names = []
+    mutex = Lock()
 
     def add_to_record(
         name: str, url: str, mp: Dict[str, pd.DataFrame], route_map_url=None
@@ -94,31 +97,41 @@ if __name__ == "__main__":
         if route_map_url:
             record["routeMapUrl"] = route_map_url
 
+        mutex.acquire()
         json_record[name] = record
         shuttle_names.append(name)
+        mutex.release()
 
-    # build metro data
-    for name, meta in metrostl_urls.items():
-        url = meta["url"]
-        print(name, url)
-        mp = get_tables_from_url(url, URLType.METRO)
-        add_to_record(name, url, mp, meta["route_map_url"])
+    def process_one_route(
+        name: str, url_type: URLType, url: str, route_map_url: str | None = None
+    ):
+        mp = get_tables_from_url(url, url_type)
+        add_to_record(name, url, mp, route_map_url)
 
-    # build washu shuttles data
-    for name, meta in washu_urls.items():
-        url = meta["url"]
-        print(name, url)
-        mp = get_tables_from_url(url, URLType.WASHU)
-        add_to_record(name, url, mp)
+
+    with ThreadPoolExecutor() as executor:
+        # build metro data
+        for name, meta in metrostl_urls.items():
+            url = meta["url"]
+            route_map_url = meta.get("route_map_url")
+            print(name, url)
+            executor.submit(
+                lambda: process_one_route(name, URLType.METRO, url, route_map_url)
+            )
+
+        # build washu shuttles data
+        for name, meta in washu_urls.items():
+            url = meta["url"]
+            print(name, url)
+            executor.submit(lambda: process_one_route(name, URLType.WASHU, url, None))
 
     json_record["shuttleNames"] = shuttle_names
     json_record["buildDate"] = datetime.now().strftime("%b %d, %Y")
 
-
     # save to file
     fname = "data.json"
     with open(fname, "w") as fp:
-        json.dump(json_record, fp)
+        json.dump(json_record, fp, indent=2)
 
     print(f"Saved record to {fname}")
 
