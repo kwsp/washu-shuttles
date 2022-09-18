@@ -15,8 +15,11 @@ jobs:
         with:
           node-version: 15
 
-      - name: Generate static data and build frontend
-        run: ./build.sh
+      - name: Build frontend
+        run: 
+          - cd frontend
+          - npm ci
+          - npm run build
 
       - name: Deploy to Github Pages
         uses: peaceiris/actions-gh-pages@v3

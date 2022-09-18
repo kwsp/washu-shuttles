@@ -125,5 +125,4 @@ if __name__ == "__main__":
     frontend_public = Path("./frontend/public")
     if frontend_public.exists():
         dest = shutil.copyfile(fname, str(frontend_public / fname))
-
-    print(f"Copied record to {frontend_public}")
+        print(f"Copied record to {frontend_public}")
