@@ -16,10 +16,10 @@ jobs:
           node-version: 15
 
       - name: Build frontend
-        run: 
-          - cd frontend
-          - npm ci
-          - npm run build
+        run: |
+          cd frontend
+          npm ci
+          npm run build
 
       - name: Deploy to Github Pages
         uses: peaceiris/actions-gh-pages@v3
